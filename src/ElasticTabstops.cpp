@@ -35,9 +35,9 @@ static int(*get_text_width)(int start, int end);
 static int startLine;
 static int endLine;
 
-enum direction {
-	BACKWARDS,
-	FORWARDS
+enum class direction {
+	BACKWARDS = 0,
+	FORWARDS = 1
 };
 
 static int get_line_start(int pos) {
@@ -62,7 +62,7 @@ static void clear_debug_marks() {
 }
 
 static int get_text_width_prop(int start, int end) {
-	std::string s(end - start + 1, 0);
+	std::string s(static_cast<size_t>(end) - static_cast<size_t>(start) + 1L, 0);
 
 	Sci_TextRange range;
 	range.chrg.cpMin = start;
@@ -86,7 +86,7 @@ static int calc_tab_width(int text_width_in_tab) {
 
 static bool change_line(int& location, direction which_dir) {
 	int line = editor.LineFromPosition(location);
-	if (which_dir == FORWARDS) {
+	if (which_dir == direction::FORWARDS) {
 		location = editor.PositionFromLine(line + 1);
 	}
 	else {
@@ -125,7 +125,7 @@ struct et_tabstop {
 
 static void measure_cells(std::vector<std::vector<et_tabstop>> &grid, int start_line, int end_line, size_t editted_cell) {
 	int current_pos = editor.PositionFromLine(start_line);
-	direction which_dir = (start_line <= end_line ? FORWARDS : BACKWARDS);
+	direction which_dir = (start_line <= end_line ? direction::FORWARDS : direction::BACKWARDS);
 
 	do {
 		unsigned char current_char = (unsigned char)editor.GetCharAt(current_pos);
@@ -167,7 +167,7 @@ static void measure_cells(std::vector<std::vector<et_tabstop>> &grid, int start_
 			current_char = (unsigned char)editor.GetCharAt(current_pos);
 		}
 
-		if (grid_line.size() <= editted_cell && !(which_dir == FORWARDS && editor.LineFromPosition(current_pos) <= end_line)) {
+		if (grid_line.size() <= editted_cell && !(which_dir == direction::FORWARDS && editor.LineFromPosition(current_pos) <= end_line)) {
 			break;
 		}
 
@@ -272,11 +272,11 @@ static void replace_nth_tab(int linenum, int cellnum, const char *text) {
 	ttf.chrg.cpMax = editor.GetLineEndPosition(linenum);
 	ttf.lpstrText = "\t";
 
-	int position = INVALID_POSITION;
+	Sci_PositionCR position = INVALID_POSITION;
 	int curcell = -1;
 	do {
 		position = editor.FindText(0, &ttf);
-		ttf.chrg.cpMin = position + 1; // Move start of the search forward
+		ttf.chrg.cpMin = position + 1L; // Move start of the search forward
 		curcell++;
 	} while (position != INVALID_POSITION && curcell != cellnum);
 
@@ -284,7 +284,7 @@ static void replace_nth_tab(int linenum, int cellnum, const char *text) {
 		return;
 	}
 
-	editor.SetTargetRange(position, position + 1);
+	editor.SetTargetRange(static_cast<int>(position), static_cast<int>(position) + 1L);
 	editor.ReplaceTarget(-1, text);
 }
 
