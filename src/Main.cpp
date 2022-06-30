@@ -17,7 +17,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include <vector>
-#include <locale>
 #include <codecvt>
 
 #include "PluginDefinition.h"
@@ -57,14 +56,20 @@ static HWND getCurrentScintilla() {
 	else return nppData._scintillaSecondHandle;
 }
 
+std::string ws2s(const std::wstring& wstr)
+{
+	using convert_typeX = std::codecvt_utf8<wchar_t>;
+	std::wstring_convert<convert_typeX, wchar_t> converterX;
+
+	return converterX.to_bytes(wstr);
+}
+
 static bool shouldProcessCurrentFile() {
 	// Check the file extension
 	wchar_t buffer[MAX_PATH] = { 0 };
 	SendMessage(nppData._nppHandle, NPPM_GETEXTPART, MAX_PATH, (LPARAM)buffer);
 	std::wstring wext(buffer);
-	using convert_typeX = std::codecvt_utf8<wchar_t>;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
-	std::string ext = converterX.to_bytes(wext);
+	std::string ext = ws2s(wext);
 
 	for (const auto &extension: config.file_extensions) {
 		if (extension == "*") return true;
